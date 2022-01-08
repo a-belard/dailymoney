@@ -16,12 +16,14 @@ const userSchema = new mongoose.Schema({
     endTime: {type: Date},
     yearStart: {type: Date},
     yearEnd: {type: Date},
-    referredBy: {type: String},
-    verified: {type: Boolean}
+    referredby: {type: String},
+    verified: {type: Boolean},
+    referrals: {type: Array},
+    activeInvestment: {type: Number, default: 0}
 },
 {timestamps: true})
 
-mongoose.model("User", userSchema)
-let user = mongoose.model("User", userSchema)
+module.exports = User = mongoose.model("User", userSchema)
 
-module.exports = user
+
+

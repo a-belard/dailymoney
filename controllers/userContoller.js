@@ -1,9 +1,17 @@
 const router = require("express").Router()
 const bcrypt = require("bcryptjs")
 const User = require("../models/userModel")
-const jwt = require("jsonwebtoken")
+const jwt = require("jsonwebtoken");
+const AdminNotification = require("../models/adminNotificationModel");
+const Notification = require("../models/notificationsModel");
+const updateBalance = require("./updateBalance");
 
 let date = new Date();
+Date.prototype.addDays = function(days) {
+    var date = new Date(this.valueOf());
+    date.setDate(date.getDate() + days);
+    return date;
+}
 
 router.post("/user",async (req,res) => {
     try {
@@ -32,12 +40,6 @@ router.post("/user",async (req,res) => {
         const salt = 10;
         const hashedPass = await bcrypt.hash(`${password}`, salt);
     
-        Date.prototype.addDays = function(days) {
-            var date = new Date(this.valueOf());
-            date.setDate(date.getDate() + days);
-            return date;
-        }
-    
         let newUser = new User({names, 
                                phone, 
                                country, 
@@ -54,14 +56,38 @@ router.post("/user",async (req,res) => {
                                verified: false
                             })
         await newUser.save()
-        .then(data => res.json(data))
+        .then(async data => {
+            let newNotification = new AdminNotification({
+                type: "green",
+                content: username + " signed up!",
+            })
+            await newNotification.save()
+            .then(()=>{}, err => {throw err})
+
+            if(referredby){
+                await User.updateOne({referredby},{
+                    $push: {
+                        referrals: String(data._id)
+                    }
+                })
+                .then(() => {}, err => {throw err})
+                let newNotification = new Notification({
+                    type: "green",
+                    content: "Good. You got a new referral called " + username,
+                    userId: referredby
+                })
+                newNotification.save()
+                .then(()=>{}, err => {throw err})
+            }
+            return res.json(data)
+        })
         .catch(err => {
             console.log(err)
             res.status(400).json(err)
         })
     } catch (error) {
         console.log(error)
-        res.status(400).json(error)
+        res.status(500).json(error)
     }
 })
 
@@ -95,10 +121,13 @@ router.post("/login", async (req, res) => {
                 const token = jwt.sign({
                     _id, names, email, gender, username, balance, walletAddress, totDeposited, totWithdrew, phone, country, referredby
                 }, process.env.app_private_key,{expiresIn: "1 days"});
-                return res.status(200).json({
+
+                res.status(200).json({
                     success: true,
-                    token: token
+                    token: token,
                 })
+                updateBalance(result)
+                return
             }
         }
     } catch (error) {
