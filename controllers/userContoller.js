@@ -5,6 +5,8 @@ const jwt = require("jsonwebtoken");
 const AdminNotification = require("../models/adminNotificationModel");
 const Notification = require("../models/notificationsModel");
 const updateBalance = require("./updateBalance");
+const { sendEmail } = require("../utils/sendEmail");
+const req = require("express/lib/request");
 
 let date = new Date();
 Date.prototype.addDays = function(days) {
@@ -56,35 +58,70 @@ router.post("/user",async (req,res) => {
                                verified: false
                             })
         await newUser.save()
-        .then(async data => {
-            let newNotification = new AdminNotification({
-                type: "green",
-                content: username + " signed up!",
-            })
-            await newNotification.save()
-            .then(()=>{}, err => {throw err})
-
-            if(referredby){
-                await User.updateOne({referredby},{
-                    $push: {
-                        referrals: String(data._id)
-                    }
-                })
-                .then(() => {}, err => {throw err})
-                let newNotification = new Notification({
-                    type: "green",
-                    content: "Good. You got a new referral called " + username,
-                    userId: referredby
-                })
-                newNotification.save()
-                .then(()=>{}, err => {throw err})
+        .then(async (data) => {
+            let options = {
+                from: process.env.EMAIL_USER,
+                to: email,
+                subject: "Dailymoney verification",
+                text: `    
+                    <div style="font-family: 'Trebuchet MS'">
+                        <h2 style="color: dodgerblue">Hello ${username}👋</h2>
+                        <p>
+                            Thanks for joining <strong>Dailymoney</strong><br> 
+                            now you remain only one step for confirming membership.
+                            <br>
+                        </p>
+                        <h4>
+                            Please click the below button for your verification!
+                        </h4>
+                        <div style="width: 120px; height:50px; background-color:dodgerblue; border-radius:7px; display:flex;justify-items:center;align-items:center"><a href="https://dailymoneybusiness.herokuapp.com/verified/${data._id}" style="text-decoration: none; padding: 15px 40px; border-radius: 7px; font-weight: bold; background-color: dodgerblue; color: white;"><strong>APPROVE</strong></a></div>
+                    </div>
+                `
             }
-            return res.json(data)
+            sendEmail(options);
+            res.json("User registerd successfully")
         })
         .catch(err => {
             console.log(err)
             res.status(400).json(err)
         })
+    } catch (error) {
+        console.log(error)
+        res.status(500).json(error)
+    }
+})
+
+router.get("/verified/:id", async (req,res) => {
+    try {
+        let user = await User.findOne({"_id": req.params.id})
+        await User.updateOne({_id: user._id}, {
+            $set: {
+                verified: true
+            }
+        })
+        let newNotification = new AdminNotification({
+                type: "green",
+                content: user.username + " signed up!",
+            })
+            await newNotification.save()
+            .then(()=>{}, err => {throw err})
+
+            if(user.referredby){
+                await User.updateOne({referredby: user.referredBy},{
+                    $push: {
+                        referrals: String(user._id)
+                    }
+                })
+                .then(() => {}, err => {throw err})
+                let newNotification = new Notification({
+                    type: "green",
+                    content: "Good. You got a new referral called " + user.username,
+                    userId: user.referredby
+                })
+                newNotification.save()
+                .then(()=>{}, err => {throw err})
+            }
+            return res.redirect("https://google.com")
     } catch (error) {
         console.log(error)
         res.status(500).json(error)
