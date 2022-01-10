@@ -83,7 +83,7 @@ router.post("/user",async (req,res) => {
                             Please click the below button for your verification and after login with your credentials. 
                         </h4>
                         <div style="width: 120px; height:50px; background-color:dodgerblue; border-radius:7px; display:flex;justify-items:center;align-items:center">
-                            <a href="http://localhost:5000/verified/${data._id}" style="text-decoration: none; padding: 15px 40px; border-radius: 7px; font-weight: bold; background-color: dodgerblue; color: white;">
+                            <a href="https://dailymoneybusiness.herokuapp.com/verified/${data._id}" style="text-decoration: none; padding: 15px 40px; border-radius: 7px; font-weight: bold; background-color: dodgerblue; color: white;">
                                 <strong>APPROVE</strong>
                             </a>
                         </div>
@@ -122,7 +122,7 @@ router.post("/verify", async (req,res) => {
                         Please click the below button for your verification and after login with your credentials. 
                     </h4>
                     <div style="width: 120px; height:50px; background-color:dodgerblue; border-radius:7px; display:flex;justify-items:center;align-items:center">
-                        <a href="http://localhost:5000/verified/${id}" style="text-decoration: none; padding: 15px 40px; border-radius: 7px; font-weight: bold; background-color: dodgerblue; color: white;">
+                        <a href="https://dailymoneybusiness.herokuapp.com/verified/${id}" style="text-decoration: none; padding: 15px 40px; border-radius: 7px; font-weight: bold; background-color: dodgerblue; color: white;">
                             <strong>APPROVE</strong>
                         </a>
                     </div>
@@ -167,7 +167,7 @@ router.get("/verified/:id", async (req,res) => {
                 newNotification.save()
                 .then(()=>{}, err => {throw err})
             }
-            return res.redirect("http://localhost:3000/login")
+            return res.redirect("http://dailymoneyprovider.netlify.app/login")
     } catch (error) {
         console.log(error)
         res.status(500).json(error)
