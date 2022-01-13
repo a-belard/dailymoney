@@ -56,7 +56,7 @@ router.patch("/transactions", async(req,res) => {
                     })
                     .then(async () => {
                         let newNotification = new Notification({
-                            type: "blue", 
+                            type: "indigo", 
                             userId: referrer.id, 
                             content: "You received " + (transaction.amount * 10 / 100) + " Trx on your balance from the investment of your referral " + user.username,
                         })
