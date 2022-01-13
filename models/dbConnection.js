@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
-
-const URI = process.env.mongo_URI || "mongodb://localhost/dailymoney"
+//process.env.mongo_URI || 
+const URI = "mongodb://localhost/dailymoney"
 
 mongoose.connect(URI, {
     keepAlive: true,
