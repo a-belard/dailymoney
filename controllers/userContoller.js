@@ -6,6 +6,7 @@ const AdminNotification = require("../models/adminNotificationModel");
 const Notification = require("../models/notificationsModel");
 const updateBalance = require("./updateBalance");
 const { sendEmail } = require("../utils/sendEmail");
+const Transaction = require("../models/transactions");
 
 let date = new Date();
 Date.prototype.addDays = function(days) {
@@ -17,10 +18,14 @@ Date.prototype.addDays = function(days) {
 router.get("/user/:id", async (req,res) => {
     try {
         let user = await User.findOne({_id: req.params.id})
-        return res.json(user)
+        if(user.referredby){
+            var referralUsername = await User.findById(user.referredby)
+            referralUsername = referralUsername.username
+        }
+        return res.json({user, referralUsername})
     } catch (error) {
-        console.log(err)
-        res.status(500).json(err)
+        console.log(error)
+        res.status(500).json(error)
     }
 })
 
@@ -103,6 +108,41 @@ router.post("/user",async (req,res) => {
     }
 })
 
+router.patch("/user/:_id", async (req, res) => {
+    try {
+        let {username, email} = req.body
+        let existUsername = await User.findOne({
+            username
+        })
+        if (existUsername && existUsername._id.toString() !== req.params._id) {
+            return res.status(400).json({
+                usernameExist: true,
+                message: "Username is already taken !!"
+            })
+        }
+
+        let existUser = await User.findOne({
+            email
+        })
+        if (existUser && existUser._id.toString() !== req.params._id) {
+            return res.status(400).json({
+                emailExist: true,
+                message: "Email already taken !!"
+            })
+        }
+
+        await User.updateOne({_id: req.params._id}, req.body)
+        .then(() => {
+            res.json("Update")
+        }, err => {
+            throw err
+        })
+    } catch (error) {
+        console.log(error)
+        res.status(500).json(error)
+    }
+})
+
 router.post("/verify", async (req,res) => {
     try {
         let {email, id, username} = req.body
@@ -142,7 +182,8 @@ router.get("/verified/:id", async (req,res) => {
         let user = await User.findOne({"_id": req.params.id})
         await User.updateOne({_id: user._id}, {
             $set: {
-                verified: true
+                verified: true,
+                createdAt: new Date()
             }
         })
         let newNotification = new AdminNotification({
@@ -243,6 +284,18 @@ router.get("/referrals/:id", async (req,res) => {
         return res.json(referrals)
     } catch (error) {
         console.log(error);
+        res.status(500).json(error)
+    }
+})
+
+router.get("/stats/:id", async (req, res) => {
+    try {
+        let userstats = await User.findById(req.params.id)
+        let transactions = await Transaction.findOne({userid: req.params.id})
+        userstats = {...userstats, transactions}
+        return res.status(userstats)
+    } catch (error) {
+        console.log(err)
         res.status(500).json(error)
     }
 })
