@@ -7,7 +7,7 @@ const router = require("express").Router()
 router.get("/notifications/:id", async (req,res) => {
     try {
         let notifs = await Notification.find({userId: req.params.id})
-        return res.json(notifs)
+        return res.json(notifs.reverse())
     } catch (error) {
         console.log(error)
         res.status(500).json(err)
