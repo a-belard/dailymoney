@@ -291,9 +291,8 @@ router.get("/referrals/:id", async (req,res) => {
 router.get("/stats/:id", async (req, res) => {
     try {
         let userstats = await User.findById(req.params.id)
-        let transactions = await Transaction.findOne({userid: req.params.id})
-        userstats = {...userstats, transactions}
-        return res.status(userstats)
+        let transactions = await Transaction.find({userId: req.params.id})
+        return res.json({userstats, transactions: transactions.reverse()})
     } catch (error) {
         console.log(err)
         res.status(500).json(error)
