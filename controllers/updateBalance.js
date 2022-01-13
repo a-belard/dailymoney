@@ -8,7 +8,7 @@ module.exports = update = async result => {
     return date;
     }
 
-    if(date >= result.endTime && date.getDate() != 0){
+    if(date >= result.endTime){
         let endTime = new Date(result.endTime)
         await User.updateOne({username: result.username}, {
             $set: {
