@@ -194,7 +194,7 @@ router.get("/verified/:id", async (req,res) => {
             .then(()=>{}, err => {throw err})
 
             if(user.referredby){
-                await User.updateOne({referredby: user.referredBy},{
+                await User.updateOne({_id: user.referredby},{
                     $push: {
                         referrals: String(user._id)
                     }
