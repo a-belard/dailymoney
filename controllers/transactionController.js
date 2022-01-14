@@ -6,7 +6,7 @@ const router = require("express").Router()
 
 router.get("/transactions", async(req,res) => {
     try {
-        let transactions = await Transaction.find()
+        let transactions = await Transaction.find().populate("userId","username","User").exec()
         return res.json(transactions);
     } catch (error) {
         console.log(error)
