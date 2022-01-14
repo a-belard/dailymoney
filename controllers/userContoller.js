@@ -250,7 +250,7 @@ router.post("/login", async (req, res) => {
             } else {
                 let {_id, names, username, email, gender, balance, walletAddress, totWithdrew, totDeposited, country, phone, referredby} = result;
                 const token = jwt.sign({
-                    _id, names, username
+                    _id, names, username, email
                 }, process.env.app_private_key,{expiresIn: "1 days"});
 
                 res.status(200).json({
@@ -295,6 +295,23 @@ router.get("/stats/:id", async (req, res) => {
         return res.json({userstats, transactions: transactions.reverse()})
     } catch (error) {
         console.log(err)
+        res.status(500).json(error)
+    }
+})
+
+router.post("/message", async (req,res) => {
+    try {
+        let {email, message} = req.body;
+        let options = {
+            from: email,
+            to: process.env.EMAIL_USER,
+            subject: "Message from " + email,
+            text: message
+        }
+        sendEmail(options)
+        return res.json("Sent")
+    } catch (error) {
+        console.log(error)
         res.status(500).json(error)
     }
 })
