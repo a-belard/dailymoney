@@ -47,7 +47,7 @@ router.patch("/transactions", async(req,res) => {
             await newNotification.save().then(() => {}, err => {throw err})
             let user = await User.findOne({_id: transaction.userId})
             if(transaction.type == "deposit"){
-                if(user.referredby && user.totDeposited == 0){
+                if(user.referredby){
                     let referrer = await User.findOne({_id: user.referredby})
                     await User.updateOne({_id: referrer._id}, {
                         $set: {
