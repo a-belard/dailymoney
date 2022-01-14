@@ -22,7 +22,7 @@ router.get("/user/:id", async (req,res) => {
             var referralUsername = await User.findById(user.referredby)
             referralUsername = referralUsername.username
         }
-        return res.json({user, referralUsername})
+        return res.json({user, referralUsername: referralUsername || ""})
     } catch (error) {
         console.log(error)
         res.status(500).json(error)
