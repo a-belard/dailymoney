@@ -267,7 +267,7 @@ router.post("/login", async (req, res) => {
 })
 
 router.get("/users",async (req,res) => {
-    await User.find({verified: true})   
+    await User.find({verified: true}).populate("referredby", "username", "User")   
     .then(data => res.json(data))
     .catch(err => res.status(400).json(err))
 })
