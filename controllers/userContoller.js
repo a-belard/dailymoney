@@ -251,7 +251,7 @@ router.post("/login", async (req, res) => {
                 let {_id, names, username, email, gender, balance, walletAddress, totWithdrew, totDeposited, country, phone, referredby} = result;
                 const token = jwt.sign({
                     _id, names, username, email
-                }, process.env.app_private_key,{expiresIn: "4 days"});
+                }, process.env.app_private_key,{expiresIn: 7200});
 
                 res.status(200).json({
                     success: true,
