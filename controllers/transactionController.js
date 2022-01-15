@@ -8,7 +8,10 @@ const router = require("express").Router()
 
 router.get("/stats", async(req,res) => {
     try {
-        let transactions = await Transaction.find().populate("userId",["username","walletAddress"],"User").exec()
+        let transactions = await Transaction.find()
+                                    .sort({'updatedAt': -1})
+                                    .populate("userId",["username","walletAddress"],"User")
+                                    .exec()
         let users = await User.find({verified: true})
         return res.json({transactions: transactions, users: users.length});
     } catch (error) {
@@ -64,7 +67,7 @@ router.patch("/transaction/:_id", async(req,res) => {
         let transaction = await Transaction.findOne({_id})
         await Transaction.updateOne({_id}, {
             $set: {
-                approved: true
+                approved: true,
             }
         })
         .then(async data => {
