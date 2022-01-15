@@ -58,9 +58,9 @@ router.post("/transactions", async(req,res) => {
     }
 })
 
-router.patch("/transactions", async(req,res) => {
+router.patch("/transaction/:_id", async(req,res) => {
     try {
-        let {_id} = req.body
+        let _id = req.params._id
         let transaction = await Transaction.findOne({_id})
         await Transaction.updateOne({_id}, {
             $set: {
