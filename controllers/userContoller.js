@@ -183,7 +183,8 @@ router.get("/verified/:id", async (req,res) => {
         await User.updateOne({_id: user._id}, {
             $set: {
                 verified: true,
-                createdAt: date.setHours(24, 0, 0, 0)
+                createdAt: date,
+                endTime: date.setHours(24, 0, 0, 0)
             }
         })
         let newNotification = new AdminNotification({
