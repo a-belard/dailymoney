@@ -4,10 +4,13 @@ const User = require("../models/userModel")
 
 const router = require("express").Router()
 
-router.get("/transactions", async(req,res) => {
+
+
+router.get("/stats", async(req,res) => {
     try {
-        let transactions = await Transaction.find().populate("userId","username","User").exec()
-        return res.json(transactions);
+        let transactions = await Transaction.find().populate("userId",["username","walletAddress"],"User").exec()
+        let users = await User.find({verified: true})
+        return res.json({transactions: transactions, users: users.length});
     } catch (error) {
         console.log(error)
         return res.status(500).json(error)
@@ -15,15 +18,23 @@ router.get("/transactions", async(req,res) => {
 })
 
 router.post("/transactions", async(req,res) => {
+    let date = new Date();
+    Date.prototype.addDays = function(days) {
+        var date = new Date(this.valueOf());
+        date.setDate(date.getDate() + days);
+        return date;
+    }
     try {
         let {userId, amount, type} = req.body;
         let newTransaction
         if(type === "withdraw"){
             let user = await User.findById(userId);
+            let endTime = new Date(user.endTime)
             await User.updateOne({_id: userId}, {
                 $set: {
                     totWithdrew: user.totWithdrew + amount,
-                    balance: 0
+                    balance: 0,
+                    endTime: endTime.addDays(1)
                 }
             })
             .then(() => {}, err => {throw err})
