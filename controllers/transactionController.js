@@ -41,7 +41,7 @@ router.post("/transactions", async(req,res) => {
             let newNotification = new Notification({
                 type: "dodgerblue",
                 userId,
-                content: new Intl.NumberFormat().format(amount) + "$ have been successfully withdrew from your account!"
+                content: new Intl.NumberFormat().format(amount) + "$ has been successfully withdrew from your account!"
             })
             await newNotification.save().then(() => {}, err => {throw err})
             newTransaction =new Transaction({userId, amount, type, approved: true})
