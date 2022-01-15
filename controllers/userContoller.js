@@ -183,7 +183,7 @@ router.get("/verified/:id", async (req,res) => {
         await User.updateOne({_id: user._id}, {
             $set: {
                 verified: true,
-                createdAt: new Date()
+                createdAt: date.setHours(24, 0, 0, 0)
             }
         })
         let newNotification = new AdminNotification({
@@ -314,6 +314,16 @@ router.post("/message", async (req,res) => {
         console.log(error)
         res.status(500).json(error)
     }
+})
+
+router.get("/update",async (req,res) => {
+    await User.updateMany({},{
+        $set: {
+            endTime: date.setHours(24, 0, 0, 0)
+        }
+    })
+    .then(() => res.json("updated"))
+    .catch(err => res.status(500).json(err))
 })
 
 module.exports = router
