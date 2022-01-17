@@ -1,3 +1,4 @@
+const Admin = require("../models/adminModel")
 const Notification = require("../models/notificationsModel")
 const Transaction = require("../models/transactions")
 const User = require("../models/userModel")
@@ -20,24 +21,50 @@ router.get("/stats", async(req,res) => {
     }
 })
 
-router.post("/transactions", async(req,res) => {
-    let date = new Date();
-    Date.prototype.addDays = function(days) {
-        var date = new Date(this.valueOf());
-        date.setDate(date.getDate() + days);
-        return date;
+router.post("/transaction/balance", async (req,res) => {
+
+    try {
+    let {userId, amount, type} = req.body;
+        let newTransaction
+        if(type === "withdraw"){
+            let user = await User.findById(userId);
+            await User.updateOne({_id: userId}, {
+                $set: {
+                    totWithdrew: user.totWithdrew + amount,
+                    balance: 0,
+                }
+            })
+            .then(() => {}, err => {throw err})
+            let newNotification = new Notification({
+                type: "dodgerblue",
+                userId,
+                content: new Intl.NumberFormat().format(amount) + "$ has been successfully withdrew from your account!"
+            })
+            await newNotification.save().then(() => {}, err => {throw err})
+            newTransaction =new Transaction({userId, amount, type, approved: true})
+        }
+        else {
+            newTransaction = new Transaction({userId, amount, type})
+        }
+        await newTransaction.save()
+        .then(data => res.json("Transaction made"), err => {throw err})
+        return
+    } catch (error) {
+        console.log(error)
+        return res.status(500).json(error) 
     }
+})
+router.post("/transactions", async(req,res) => {
     try {
         let {userId, amount, type} = req.body;
         let newTransaction
         if(type === "withdraw"){
             let user = await User.findById(userId);
-            let endTime = new Date(user.endTime)
             await User.updateOne({_id: userId}, {
                 $set: {
                     totWithdrew: user.totWithdrew + amount,
                     balance: 0,
-                    endTime: user.activeInvestment > 0 ? endTime.addDays(1) : endTime
+                    balanceCount: user.balanceCount + 1
                 }
             })
             .then(() => {}, err => {throw err})
@@ -110,6 +137,26 @@ router.patch("/transaction/:_id", async(req,res) => {
         console.log(error)
         return res.status(500).json(error)  
     }
+})
+
+router.patch("/admin", async (req, res) => {
+    try {
+        let admin = await Admin.findOne()
+        await Admin.updateMany({}, {$set: {count: admin.count + 1}})
+        return res.json("Updated")
+    } catch (error) {
+        res.status(500).json(error)
+    }
+})
+
+router.get("/admin", async (req, res) => {
+    let admin = await Admin.findOne({})
+    return res.json(admin.count)
+})
+
+router.get("/balances/:count", async (req,res) => {
+    let users = await User.find({balanceCount: {$lt: req.params.count}})
+    return res.json(users)
 })
 
 module.exports = router
