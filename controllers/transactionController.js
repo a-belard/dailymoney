@@ -37,7 +37,7 @@ router.post("/transactions", async(req,res) => {
                 $set: {
                     totWithdrew: user.totWithdrew + amount,
                     balance: 0,
-                    endTime: endTime.addDays(1)
+                    endTime: user.activeInvestment > 0 ? endTime.addDays(1) : endTime
                 }
             })
             .then(() => {}, err => {throw err})
