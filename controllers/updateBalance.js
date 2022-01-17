@@ -3,7 +3,7 @@ const User = require("../models/userModel");
 module.exports = update = async result => {
     let date = new Date();
     Date.prototype.addDays = function(days) {
-    var date = new Date(this.valueOf());
+    let date = new Date(this.valueOf());
     date.setDate(date.getDate() + days);
     return date;
     }
