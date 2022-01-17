@@ -77,7 +77,7 @@ router.patch("/transaction/:_id", async(req,res) => {
                 userId: transaction.userId,
                 content: transaction.type == "deposit" ? "Your account has been topped up with " + new Intl.NumberFormat().format(transaction.amount) + " $" : transaction.amount + " $ have been successfully withdrew from your account!"
             })
-            await newNotification.save().then(() => {}, err => {throw err})
+            newNotification.save().then(() => {}, err => {throw err})
             let user = await User.findOne({_id: transaction.userId})
             if(transaction.type == "deposit"){
                 if(user.referredby){
@@ -93,7 +93,7 @@ router.patch("/transaction/:_id", async(req,res) => {
                             userId: referrer.id, 
                             content: "You received " + (transaction.amount * 10 / 100) + " $ on your balance from the investment of your referral " + user.username,
                         })
-                        await newNotification.save().then(() => {}, err => {throw err})
+                        newNotification.save().then(() => {}, err => {throw err})
                     })
                 }
                 await User.updateOne({_id: user._id}, {
