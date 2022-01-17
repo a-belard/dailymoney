@@ -192,7 +192,7 @@ router.get("/verified/:id", async (req,res) => {
                 type: "green",
                 content: user.username + " signed up!",
             })
-            await newNotification.save()
+            newNotification.save()
             .then(()=>{}, err => {throw err})
 
             if(user.referredby){
