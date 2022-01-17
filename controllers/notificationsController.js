@@ -17,7 +17,7 @@ router.get("/notifications/:id", async (req,res) => {
 router.get("/notifications", async (req,res) => {
     try {
         let notifs = await AdminNotification.find()
-        return res.json(notifs)
+        return res.json(notifs.reverse())
     } catch (error) {
         console.log(error)
         res.status(500).json(err)
