@@ -3,9 +3,9 @@ const User = require("../models/userModel");
 module.exports = update = async result => {
     let date = new Date();
     Date.prototype.addDays = function(days) {
-    let date = new Date(this.valueOf());
-    date.setDate(date.getDate() + days);
-    return date;
+        let date = new Date(this.valueOf());
+        date.setDate(date.getDate() + days);
+        return date;
     }
     
     if(date >= result.endTime){
@@ -14,7 +14,7 @@ module.exports = update = async result => {
             $set: {
                 balance: result.balance + (result.activeInvestment * 3 / 100),
                 initTime: endTime,
-                endTime: endTime.addDays(1)
+                endTime: result.activeInvestment > 0 ? endTime.addDays(1) : endTime
             }
         })
         .then(()=>{}, err => {throw err})
