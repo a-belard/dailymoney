@@ -327,4 +327,15 @@ router.get("/update",async (req,res) => {
     .catch(err => res.status(500).json(err))
 })
 
+router.delete("/user/:id", async (req,res) => {
+    try {
+        let id = req.params.id;
+        await User.deleteOne({_id: id})
+        .then(() => res.json("Deleted!"),
+        err => res.status(400).json(err))
+    } catch (error) {
+        console.log(error)
+        res.status(500).json(error)
+    }
+})
 module.exports = router
