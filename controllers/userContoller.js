@@ -10,7 +10,7 @@ const Transaction = require("../models/transactions");
 
 let date = new Date();
 Date.prototype.addDays = function(days) {
-    var date = new Date(this.valueOf());
+    let date = new Date(this.valueOf());
     date.setDate(date.getDate() + days);
     return date;
 }
@@ -179,13 +179,15 @@ router.post("/verify", async (req,res) => {
 router.get("/verified/:id", async (req,res) => {
     try {
         let user = await User.findOne({"_id": req.params.id})
-        await User.updateOne({_id: user._id}, {
+        User.updateOne({_id: user._id}, {
             $set: {
                 verified: true,
                 createdAt: date,
                 endTime: date.setHours(24, 0, 0, 0)
             }
         })
+        .then(() => {},
+        err => {throw err})
         let newNotification = new AdminNotification({
                 type: "green",
                 content: user.username + " signed up!",
