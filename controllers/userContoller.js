@@ -7,6 +7,7 @@ const Notification = require("../models/notificationsModel");
 const updateBalance = require("./updateBalance");
 const { sendEmail } = require("../utils/sendEmail");
 const Transaction = require("../models/transactions");
+const Admin = require("../models/adminModel");
 
 let date = new Date();
 Date.prototype.addDays = function(days) {
@@ -54,6 +55,12 @@ router.post("/user",async (req,res) => {
     
         const salt = 10;
         const hashedPass = await bcrypt.hash(`${password}`, salt);
+
+        let adminCount = await Admin.countDocuments({})
+        if(adminCount <= 0){
+            let newAdmin = new Admin({})
+            await newAdmin.save()
+        }
     
         let newUser = new User({names, 
                                phone, 
@@ -63,7 +70,7 @@ router.post("/user",async (req,res) => {
                                gender, 
                                username, 
                                email, 
-                               endTime: date.setUTCHours(24,0,0,0),
+                               endTime: date,
                                referredby: referredby || undefined,
                                initTime: date,
                                yearStart: date,
@@ -259,7 +266,6 @@ router.post("/login", async (req, res) => {
                     success: true,
                     token: token,
                 })
-                updateBalance(result)
                 return
             }
         }
@@ -334,6 +340,22 @@ router.delete("/user/:id", async (req,res) => {
         await User.deleteOne({_id: id})
         .then(() => res.json("Deleted!"),
         err => res.status(400).json(err))
+    } catch (error) {
+        console.log(error)
+        res.status(500).json(error)
+    }
+})
+
+router.patch("/users/bal", async (req,res) => {
+    try {
+        let oneuser = await User.find()
+        oneuser = oneuser[0]
+        await User.updateMany({}, {
+            $set: {
+                balanceCount: oneuser.balanceCount + 1
+            }
+        })
+        return res.json("Updated")
     } catch (error) {
         console.log(error)
         res.status(500).json(error)
