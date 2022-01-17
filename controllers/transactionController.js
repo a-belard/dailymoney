@@ -63,7 +63,6 @@ router.post("/transactions", async(req,res) => {
             await User.updateOne({_id: userId}, {
                 $set: {
                     totWithdrew: user.totWithdrew + amount,
-                    balance: 0,
                     balanceCount: user.balanceCount + 1
                 }
             })
