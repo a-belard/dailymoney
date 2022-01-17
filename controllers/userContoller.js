@@ -63,9 +63,8 @@ router.post("/user",async (req,res) => {
                                gender, 
                                username, 
                                email, 
-                               referredby,
+                               referredby: referredby || undefined,
                                initTime: date,
-                               endTime: date.addDays(1),
                                yearStart: date,
                                yearEnd: date.addDays(366),
                                verified: false
@@ -273,11 +272,11 @@ router.get("/users",async (req,res) => {
     .catch(err => res.status(400).json(err))
 })
 
-router.delete("/users",async (req,res) => {
-    await User.deleteMany({})
-    .then(() => res.json("All deleted"))
-    .catch((err) => res.status(400).json(err))
-})
+// router.delete("/users",async (req,res) => {
+//     await User.deleteMany({})
+//     .then(() => res.json("All deleted"))
+//     .catch((err) => res.status(400).json(err))
+// })
 
 router.get("/referrals/:id", async (req,res) => {
     try {
