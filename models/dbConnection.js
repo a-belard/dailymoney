@@ -12,3 +12,6 @@ mongoose.connect(URI, {
     .catch(err => console.log(err));
 
 require("./userModel");
+require("./notificationsModel")
+require("./adminNotificationModel")
+require("./transactions")
