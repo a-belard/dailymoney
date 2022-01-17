@@ -19,6 +19,7 @@ const userSchema = new mongoose.Schema({
     referredby: {type: String},
     verified: {type: Boolean},
     referrals: {type: Array},
+    balanceCount: {type: Number, default: 0},
     activeInvestment: {type: Number, default: 0}
 },
 {timestamps: true})
