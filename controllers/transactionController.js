@@ -75,7 +75,7 @@ router.patch("/transaction/:_id", async(req,res) => {
             let newNotification = new Notification({
                 type: transaction.type == "deposit" ? "blue" : "dodgerblue",
                 userId: transaction.userId,
-                content: transaction.type == "deposit" ? "Your account has been topped up with " + new Intl.NumberFormat().format(transaction.amount) + " $" : transaction.amount + " Trx have been successfully withdrew from your account!"
+                content: transaction.type == "deposit" ? "Your account has been topped up with " + new Intl.NumberFormat().format(transaction.amount) + " $" : transaction.amount + " $ have been successfully withdrew from your account!"
             })
             await newNotification.save().then(() => {}, err => {throw err})
             let user = await User.findOne({_id: transaction.userId})
@@ -91,7 +91,7 @@ router.patch("/transaction/:_id", async(req,res) => {
                         let newNotification = new Notification({
                             type: "indigo", 
                             userId: referrer.id, 
-                            content: "You received " + (transaction.amount * 10 / 100) + " Trx on your balance from the investment of your referral " + user.username,
+                            content: "You received " + (transaction.amount * 10 / 100) + " $ on your balance from the investment of your referral " + user.username,
                         })
                         await newNotification.save().then(() => {}, err => {throw err})
                     })
