@@ -123,10 +123,13 @@ router.patch("/transaction/:_id", async(req,res) => {
                         newNotification.save().then(() => {}, err => {throw err})
                     })
                 }
+                let admin = await Admin.findOne({})
+                admin = admin.count
                 await User.updateOne({_id: user._id}, {
                     $set: {
                         totDeposited: user.totDeposited + transaction.amount,
-                        activeInvestment: user.activeInvestment + transaction.amount
+                        activeInvestment: user.activeInvestment + transaction.amount,
+                        balanceCount: admin
                     }
                 })
                 .then(() => {}, err => {throw err})
