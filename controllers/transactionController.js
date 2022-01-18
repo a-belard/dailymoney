@@ -163,4 +163,11 @@ router.get("/balances/:count", async (req,res) => {
     return res.json(users)
 })
 
+router.delete("/transaction/:id", async (req, res) => {
+    await Transaction.deleteOne({_id: req.params.id})
+    .then(() => res.json("deleted"),
+    err => res.status(400).json(err))
+    return
+})
+
 module.exports = router
