@@ -60,10 +60,12 @@ router.post("/transactions", async(req,res) => {
         let newTransaction
         if(type === "withdraw"){
             let user = await User.findById(userId);
+            let admin = await Admin.findOne({})
+            admin = admin.count
             await User.updateOne({_id: userId}, {
                 $set: {
                     totWithdrew: user.totWithdrew + amount,
-                    balanceCount: user.balanceCount + 1
+                    balanceCount: admin
                 }
             })
             .then(() => {}, err => {throw err})
