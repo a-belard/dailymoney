@@ -346,16 +346,16 @@ router.delete("/user/:id", async (req,res) => {
     }
 })
 
-router.patch("/users/bal", async (req,res) => {
+router.patch("/user/bal/:id", async (req,res) => {
     try {
-        let oneuser = await User.find()
-        oneuser = oneuser[0]
-        await User.updateMany({}, {
+        let admin = await Admin.findOne({})
+        admin = admin.count
+        await User.updateOne({_id: req.params.id}, {
             $set: {
-                balanceCount: oneuser.balanceCount + 1
+                balanceCount: admin
             }
         })
-        return res.json("Updated")
+        return res.json("Skept")
     } catch (error) {
         console.log(error)
         res.status(500).json(error)
