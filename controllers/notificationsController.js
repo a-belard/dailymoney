@@ -10,7 +10,7 @@ router.get("/notifications/:id", async (req,res) => {
         return res.json(notifs.reverse())
     } catch (error) {
         console.log(error)
-        res.status(500).json(err)
+        res.status(500).json(error)
     } 
 })
 
@@ -20,7 +20,7 @@ router.get("/notifications", async (req,res) => {
         return res.json(notifs.reverse())
     } catch (error) {
         console.log(error)
-        res.status(500).json(err)
+        res.status(500).json(error)
     } 
 })
 
@@ -47,7 +47,7 @@ router.patch("/notification/:id", async(req,res) => {
         return res.status("Read")
     } catch (error) {
         console.log(error)
-        res.status(500).json(err)
+        res.status(500).json(error)
     }
 })
 
@@ -60,7 +60,7 @@ router.delete("/notification/:id", async (req,res) => {
         return res.json("Deleted")
     } catch (error) {
         console.log(error)
-        res.status(500).json(err)
+        res.status(500).json(error)
     }
 })
 
