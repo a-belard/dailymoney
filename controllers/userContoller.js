@@ -1,6 +1,6 @@
-const router = require("express").Router()
-const bcrypt = require("bcryptjs")
-const User = require("../models/userModel")
+const router = require("express").Router();
+const bcrypt = require("bcryptjs");
+const User = require("../models/userModel");
 const jwt = require("jsonwebtoken");
 const AdminNotification = require("../models/adminNotificationModel");
 const Notification = require("../models/notificationsModel");
@@ -10,80 +10,92 @@ const Transaction = require("../models/transactions");
 const Admin = require("../models/adminModel");
 
 let date = new Date();
-Date.prototype.addDays = function(days) {
-    let date = new Date(this.valueOf());
-    date.setDate(date.getDate() + days);
-    return date;
-}
+Date.prototype.addDays = function (days) {
+  let date = new Date(this.valueOf());
+  date.setDate(date.getDate() + days);
+  return date;
+};
 
-router.get("/user/:id", async (req,res) => {
-    try {
-        let user = await User.findOne({_id: req.params.id})
-        if(user.referredby){
-            var referralUsername = await User.findById(user.referredby)
-            referralUsername = referralUsername.username
-        }
-        return res.json({user, referralUsername: referralUsername || ""})
-    } catch (error) {
-        console.log(error)
-        res.status(500).json(error)
+router.get("/user/:id", async (req, res) => {
+  try {
+    let user = await User.findOne({ _id: req.params.id });
+    if (user.referredby) {
+      var referralUsername = await User.findById(user.referredby);
+      referralUsername = referralUsername.username;
     }
-})
+    return res.json({ user, referralUsername: referralUsername || "" });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json(error);
+  }
+});
 
-router.post("/user",async (req,res) => {
-    try {
-        let {names, phone, country, password, email, username, walletAddress, gender, referredby} = req.body
-        let existUsername = await User.findOne({
-            username
-        })
-        if (existUsername) {
-            return res.status(400).json({
-                usernameExist: true,
-                message: "Username is already taken !!"
-            })
-        }
+router.post("/user", async (req, res) => {
+  try {
+    let {
+      names,
+      phone,
+      country,
+      password,
+      email,
+      username,
+      walletAddress,
+      gender,
+      referredby,
+    } = req.body;
+    let existUsername = await User.findOne({
+      username,
+    });
+    if (existUsername) {
+      return res.status(400).json({
+        usernameExist: true,
+        message: "Username is already taken !!",
+      });
+    }
 
-        let existUser = await User.findOne({
-            email
-        })
-        if (existUser) {
-            return res.status(400).json({
-                emailExist: true,
-                message: "Email already exists !!"
-            })
-        }
-    
-        const salt = 10;
-        const hashedPass = await bcrypt.hash(`${password}`, salt);
+    let existUser = await User.findOne({
+      email,
+    });
+    if (existUser) {
+      return res.status(400).json({
+        emailExist: true,
+        message: "Email already exists !!",
+      });
+    }
 
-        let adminCount = await Admin.countDocuments({})
-        if(adminCount <= 0){
-            let newAdmin = new Admin({})
-            await newAdmin.save()
-        }
-    
-        let newUser = new User({names, 
-                               phone, 
-                               country, 
-                               password: hashedPass, 
-                               walletAddress, 
-                               gender, 
-                               username, 
-                               email, 
-                               endTime: date,
-                               referredby: referredby || undefined,
-                               initTime: date,
-                               yearStart: date,
-                               yearEnd: date.addDays(366),
-                               verified: false
-                            })
-        await newUser.save()
-        .then((data) => {
-            let options = {
-                from: process.env.EMAIL_USER,
-                to: email,
-                subject: "Dailymoney verification",
-                text: `    
+    const salt = 10;
+    const hashedPass = await bcrypt.hash(`${password}`, salt);
+
+    let adminCount = await Admin.countDocuments({});
+    if (adminCount <= 0) {
+      let newAdmin = new Admin({});
+      await newAdmin.save();
+    }
+
+    let newUser = new User({
+      names,
+      phone,
+      country,
+      password: hashedPass,
+      walletAddress,
+      gender,
+      username,
+      email,
+      endTime: date,
+      referredby: referredby || undefined,
+      initTime: date,
+      yearStart: date,
+      yearEnd: date.addDays(366),
+      verified: false,
+    });
+    await newUser
+      .save()
+      .then((data) => {
+        let options = {
+          from: process.env.EMAIL_USER,
+          to: email,
+          subject: "Dailymoney verification",
+          text: `    
                     <div style="font-family: 'Trebuchet MS'">
                         <h2 style="color: dodgerblue">Hello ${username}👋</h2>
                         <p>
@@ -100,64 +112,66 @@ router.post("/user",async (req,res) => {
                             </a>
                         </div>
                     </div>
-                `
-            }
-            sendEmail(options);
-            res.json(data)
-        })
-        .catch(err => {
-            console.log(err)
-            res.status(400).json(err)
-        })
-    } catch (error) {
-        console.log(error)
-        res.status(500).json(error)
-    }
-})
+                `,
+        };
+        sendEmail(options);
+        res.json(data);
+      })
+      .catch((err) => {
+        console.log(err);
+        res.status(400).json(err);
+      });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json(error);
+  }
+});
 
 router.patch("/user/:_id", async (req, res) => {
-    try {
-        let {username, email} = req.body
-        let existUsername = await User.findOne({
-            username
-        })
-        if (existUsername && existUsername._id.toString() !== req.params._id) {
-            return res.status(400).json({
-                usernameExist: true,
-                message: "Username is already taken !!"
-            })
-        }
-
-        let existUser = await User.findOne({
-            email
-        })
-        if (existUser && existUser._id.toString() !== req.params._id) {
-            return res.status(400).json({
-                emailExist: true,
-                message: "Email already taken !!"
-            })
-        }
-
-        await User.updateOne({_id: req.params._id}, req.body)
-        .then(() => {
-            res.json("Update")
-        }, err => {
-            throw err
-        })
-    } catch (error) {
-        console.log(error)
-        res.status(500).json(error)
+  try {
+    let { username, email } = req.body;
+    let existUsername = await User.findOne({
+      username,
+    });
+    if (existUsername && existUsername._id.toString() !== req.params._id) {
+      return res.status(400).json({
+        usernameExist: true,
+        message: "Username is already taken !!",
+      });
     }
-})
 
-router.post("/verify", async (req,res) => {
-    try {
-        let {email, id, username} = req.body
-        let options = {
-            from: process.env.EMAIL_USER,
-            to: email,
-            subject: "Dailymoney verification",
-            text: `    
+    let existUser = await User.findOne({
+      email,
+    });
+    if (existUser && existUser._id.toString() !== req.params._id) {
+      return res.status(400).json({
+        emailExist: true,
+        message: "Email already taken !!",
+      });
+    }
+
+    await User.updateOne({ _id: req.params._id }, req.body).then(
+      () => {
+        res.json("Update");
+      },
+      (err) => {
+        throw err;
+      }
+    );
+  } catch (error) {
+    console.log(error);
+    res.status(500).json(error);
+  }
+});
+
+router.post("/verify", async (req, res) => {
+  try {
+    let { email, id, username } = req.body;
+    let options = {
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: "Dailymoney verification",
+      text: `    
                 <div style="font-family: 'Trebuchet MS'">
                     <h2 style="color: dodgerblue">Hello ${username}👋</h2>
                     <p>
@@ -169,116 +183,156 @@ router.post("/verify", async (req,res) => {
                         Please click the below button for your verification and after login with your credentials. 
                     </h4>
                     <div style="width: 120px; height:50px; background-color:dodgerblue; border-radius:7px; display:flex;justify-items:center;align-items:center">
-                        <a href="https://dailymoneybusiness.herokuapp.com/verified/${id}" style="text-decoration: none; padding: 15px 40px; border-radius: 7px; font-weight: bold; background-color: dodgerblue; color: white;">
+                        <a href="https://dailymoney.onrender.com/verified/${id}" style="text-decoration: none; padding: 15px 40px; border-radius: 7px; font-weight: bold; background-color: dodgerblue; color: white;">
                             <strong>APPROVE</strong>
                         </a>
                     </div>
                 </div>
-            `
-        } 
-        sendEmail(options)
-        return res.json("Sent")
-    } catch (error) {
-        console.log(error)
-        res.status(500).json(error)
+            `,
+    };
+    sendEmail(options);
+    return res.json("Sent");
+  } catch (error) {
+    console.log(error);
+    res.status(500).json(error);
+  }
+});
+
+router.get("/verified/:id", async (req, res) => {
+  try {
+    let user = await User.findOne({ _id: req.params.id });
+    User.updateOne(
+      { _id: user._id },
+      {
+        $set: {
+          verified: true,
+          createdAt: date,
+        },
+      }
+    ).then(
+      () => {},
+      (err) => {
+        throw err;
+      }
+    );
+    let newNotification = new AdminNotification({
+      type: "green",
+      content: user.username + " signed up!",
+    });
+    newNotification.save().then(
+      () => {},
+      (err) => {
+        throw err;
+      }
+    );
+
+    if (user.referredby) {
+      await User.updateOne(
+        { _id: user.referredby },
+        {
+          $addToSet: {
+            referrals: String(user._id),
+          },
+        }
+      ).then(
+        () => {},
+        (err) => {
+          throw err;
+        }
+      );
+      let newNotification = new Notification({
+        type: "green",
+        content: "Good. You got a new referral called " + user.username,
+        userId: user.referredby,
+      });
+      newNotification.save().then(
+        () => {},
+        (err) => {
+          throw err;
+        }
+      );
     }
-})
+    return res.redirect("https://daily-money-app.netlify.app/login");
+  } catch (error) {
+    console.log(error);
+    res.status(500).json(error);
+  }
+});
 
-router.get("/verified/:id", async (req,res) => {
-    try {
-        let user = await User.findOne({"_id": req.params.id})
-        User.updateOne({_id: user._id}, {
-            $set: {
-                verified: true,
-                createdAt: date,
-            }
-        })
-        .then(() => {},
-        err => {throw err})
-        let newNotification = new AdminNotification({
-                type: "green",
-                content: user.username + " signed up!",
-            })
-            newNotification.save()
-            .then(()=>{}, err => {throw err})
-
-            if(user.referredby){
-                   await User.updateOne({_id: user.referredby},{
-                    $addToSet: {
-                        referrals: String(user._id)
-                    }
-                })
-                .then(() => {}, err => {throw err})
-                let newNotification = new Notification({
-                    type: "green",
-                    content: "Good. You got a new referral called " + user.username,
-                    userId: user.referredby
-                })
-                newNotification.save()
-                .then(()=>{}, err => {throw err})
-            }
-            return res.redirect("http://dailymoneyprovider.netlify.app/login")
-    } catch (error) {
-        console.log(error)
-        res.status(500).json(error)
-    }
-})
-
-router.get("/username/:id", async (req,res) => {
-    let user = await User.findOne({_id: String(req.params.id)})
-    return res.json(String(user.username))
-})
+router.get("/username/:id", async (req, res) => {
+  let user = await User.findOne({ _id: String(req.params.id) });
+  return res.json(String(user.username));
+});
 
 router.post("/login", async (req, res) => {
-    try {
-        const {username, password} = req.body;
-        const result = await User.findOne({
-            username
-        })
-        if (!result) {
-            return res.status(400).json({
-                success: false,
-                message: `Incorrect username or password`
-            })
-        }
+  try {
+    const { username, password } = req.body;
+    const result = await User.findOne({
+      username,
+    });
+    if (!result) {
+      return res.status(400).json({
+        success: false,
+        message: `Incorrect username or password`,
+      });
+    } else if (result.verified !== true) {
+      return res.status(400).json({
+        success: false,
+        message: "Verify your email in order to login!",
+        id: result._id,
+        email: result.email,
+      });
+    } else {
+      const checkPassword = await bcrypt.compare(password, result.password);
+      if (!checkPassword) {
+        return res.status(400).json({
+          success: false,
+          message: `Incorrect username or password!`,
+        });
+      } else {
+        let {
+          _id,
+          names,
+          username,
+          email,
+          gender,
+          balance,
+          walletAddress,
+          totWithdrew,
+          totDeposited,
+          country,
+          phone,
+          referredby,
+        } = result;
+        const token = jwt.sign(
+          {
+            _id,
+            names,
+            username,
+            email,
+          },
+          process.env.app_private_key,
+          { expiresIn: 7200 }
+        );
 
-        else if (result.verified !== true) {
-            return res.status(400).json({
-                success: false,
-                message: "Verify your email in order to login!",
-                id: result._id,
-                email: result.email
-            })
-        } else {
-            const checkPassword = await bcrypt.compare(password, result.password)
-            if (!checkPassword) {
-                return res.status(400).json({
-                    success: false,
-                    message: `Incorrect username or password!`
-                })
-            } else {
-                let {_id, names, username, email, gender, balance, walletAddress, totWithdrew, totDeposited, country, phone, referredby} = result;
-                const token = jwt.sign({
-                    _id, names, username, email
-                }, process.env.app_private_key,{expiresIn: 7200});
-
-                res.status(200).json({
-                    success: true,
-                    token: token,
-                })
-                return
-            }
-        }
-    } catch (error) {
-        console.log(error)
+        res.status(200).json({
+          success: true,
+          token: token,
+        });
+        return;
+      }
     }
-})
+  } catch (error) {
+    console.log(error);
+  }
+});
 
-router.get("/users",async (req,res) => {
-    await User.find({verified: true}).populate("referredby", "username", "User")   
-    .then(data => res.json(data))
-    .catch(err => res.status(400).json(err))
-})
+router.get("/users", async (req, res) => {
+  await User.find({ verified: true })
+    .populate("referredby", "username", "User")
+    .then((data) => res.json(data))
+    .catch((err) => res.status(400).json(err));
+});
 
 // router.delete("/users",async (req,res) => {
 //     await User.deleteMany({})
@@ -286,79 +340,89 @@ router.get("/users",async (req,res) => {
 //     .catch((err) => res.status(400).json(err))
 // })
 
-router.get("/referrals/:id", async (req,res) => {
-    try {
-        let referrals = await User.find({referredby: req.params.id}, {username: 1, createdAt: 1})
-        return res.json(referrals)
-    } catch (error) {
-        console.log(error);
-        res.status(500).json(error)
-    }
-})
+router.get("/referrals/:id", async (req, res) => {
+  try {
+    let referrals = await User.find(
+      { referredby: req.params.id },
+      { username: 1, createdAt: 1 }
+    );
+    return res.json(referrals);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json(error);
+  }
+});
 
 router.get("/stats/:id", async (req, res) => {
-    try {
-        let userstats = await User.findById(req.params.id)
-        let transactions = await Transaction.find({userId: req.params.id})
-        return res.json({userstats, transactions: transactions.reverse()})
-    } catch (error) {
-        console.log(err)
-        res.status(500).json(error)
-    }
-})
+  try {
+    let userstats = await User.findById(req.params.id);
+    let transactions = await Transaction.find({ userId: req.params.id });
+    return res.json({ userstats, transactions: transactions.reverse() });
+  } catch (error) {
+    console.log(err);
+    res.status(500).json(error);
+  }
+});
 
-router.post("/message", async (req,res) => {
-    try {
-        let {email, message} = req.body;
-        let options = {
-            from: email,
-            to: process.env.EMAIL_USER,
-            subject: "Message from " + email,
-            text: message
-        }
-        sendEmail(options)
-        return res.json("Sent")
-    } catch (error) {
-        console.log(error)
-        res.status(500).json(error)
-    }
-})
+router.post("/message", async (req, res) => {
+  try {
+    let { email, message } = req.body;
+    let options = {
+      from: email,
+      to: process.env.EMAIL_USER,
+      subject: "Message from " + email,
+      text: message,
+    };
+    sendEmail(options);
+    return res.json("Sent");
+  } catch (error) {
+    console.log(error);
+    res.status(500).json(error);
+  }
+});
 
-router.get("/update",async (req,res) => {
-    await User.updateMany({},{
-        $set: {
-            endTime: date.setHours(24, 0, 0, 0)
-        }
-    })
+router.get("/update", async (req, res) => {
+  await User.updateMany(
+    {},
+    {
+      $set: {
+        endTime: date.setHours(24, 0, 0, 0),
+      },
+    }
+  )
     .then(() => res.json("updated"))
-    .catch(err => res.status(500).json(err))
-})
+    .catch((err) => res.status(500).json(err));
+});
 
-router.delete("/user/:id", async (req,res) => {
-    try {
-        let id = req.params.id;
-        await User.deleteOne({_id: id})
-        .then(() => res.json("Deleted!"),
-        err => res.status(400).json(err))
-    } catch (error) {
-        console.log(error)
-        res.status(500).json(error)
-    }
-})
+router.delete("/user/:id", async (req, res) => {
+  try {
+    let id = req.params.id;
+    await User.deleteOne({ _id: id }).then(
+      () => res.json("Deleted!"),
+      (err) => res.status(400).json(err)
+    );
+  } catch (error) {
+    console.log(error);
+    res.status(500).json(error);
+  }
+});
 
-router.patch("/user/bal/:id", async (req,res) => {
-    try {
-        let admin = await Admin.findOne({})
-        admin = admin.count
-        await User.updateOne({_id: req.params.id}, {
-            $set: {
-                balanceCount: admin
-            }
-        })
-        return res.json("Skept")
-    } catch (error) {
-        console.log(error)
-        res.status(500).json(error)
-    }
-})
-module.exports = router
+router.patch("/user/bal/:id", async (req, res) => {
+  try {
+    let admin = await Admin.findOne({});
+    admin = admin.count;
+    await User.updateOne(
+      { _id: req.params.id },
+      {
+        $set: {
+          balanceCount: admin,
+        },
+      }
+    );
+    return res.json("Skept");
+  } catch (error) {
+    console.log(error);
+    res.status(500).json(error);
+  }
+});
+module.exports = router;
